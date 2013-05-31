@@ -1,5 +1,8 @@
 require 'GameCreationManager.rb'
 
 manager = GameCreationManager.new
-manager.createGameCanvas
-manager.createGameCode
+
+manager.setPath
+manager.setName
+
+manager.createGame
