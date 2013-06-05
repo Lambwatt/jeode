@@ -1,24 +1,35 @@
+require 'TemplateFormats'
+require 'tools'
+
 require 'rubygems'
 require 'json'
 
+def initializeFile(name)
+	file = open(name, 'w')
+	file.close
+end
+
 def read_file_sandwhich(fileName)
-	file = open(filename, 'r')
+	file = open(fileName, 'r')
 	yield(file)
 	ensure
 		file.close if file
 end
 
 def append_file_sandwhich(fileName)
-	file = open(filename, 'a')
+	file = File.open(fileName, 'a')
 	yield(file)
 	ensure
 		file.close if file
 end
 
 class GameCreationManager
-	@prompt = ">>"
-	@path = ""
-	@formats = getFormats
+	
+	def initialize
+		@prompt = ">>"
+		@path = "outputs"
+		@formats = getFormats
+	end
 	
 	def evalParamater(guide)
 		eval(guide["validate"])	
@@ -33,12 +44,17 @@ class GameCreationManager
 		
 		s.gsub!(/[\n\t]/,'')	
 			
-		return '#{guide["prefix"]}#{s}#{guide[suffix]}'
+		pre = guide["prefix"]
+		suf = guide["suffix"]
+		return pre+s+suf
 	end
 	
-	def evalVariable(guide)	
-			return '#{guide["prefix"]}#{memory[guide["name"]]}#{guide[suffix]}'
-		end	
+	def evalVariable(guide, memory)	
+		str1 = guide["prefix"]
+		str2 = memory[guide["name"]]
+		str3 = guide["suffix"]
+		return str1+str2+str3
+	end	
 	
 	def evalGuide(guide, memory)
 		case guide["type"]
@@ -51,7 +67,7 @@ class GameCreationManager
 	
 	def fillTemplate(templateFile, destFile, format)
 		
-		unless @formats.hasKey? format
+		unless @formats.has_key? format
 			p "format not recognized"
 			return
 		end
@@ -66,32 +82,34 @@ class GameCreationManager
 				
 				js_file.read.split(/STOP/).each{ |section|
 					
-					metaData = section.gsub(/["]/,'\\\"').match(/#{commentStart}(.[\s]*.)*#{commentEnd}/)
+					#nFix redundant operations
+					metaData = section.gsub(/["]/,'\\\"').gsub(/[\n\t]/,'')
+					metaData = metaData.match(/#{commentStart}(.[\s]*.)*#{commentEnd}/) if format == "javascript"
+					metaData = section.gsub(/["]/,'\\\"').match(/#{commentStart}(.[\s]*.)*#{commentEnd}/) if format == "html"
 					
 					unless metaData == nil
 						metaData = metaData[0]
-						guide = metaData.gsub(/[\n\t\\]/,'')
-						guide = guide[2...-2]
+						guide = metaData.gsub(/[\n\t]/,'')
+						guide.gsub!(/\\\"/,"\"")
+						guide = guide[ @formats[format]["startLength"]...-(@formats[format]["endLength"])]
 						guide = JSON.parse(guide)
 				
 						tail = metaData.gsub(/\\\"/,'"')
 						
-						destFile<<section.sub(tail,'')
-						destFile<<metaData
-						destFile<<evalGuide(guide, memory)
+						str = sprintf( "%s%s",section.sub(tail,''),evalGuide(guide, memory))
+						dest<<str
 					else
-						destFile<<section
+						dest<<section
 					end
 				}
 			}
 		}
 	end
 	
-	def createGameCode()
-		
-		fillTemplate("statics.js","#{@path}/#{@name}.js","javascript")
-		fillTemplate("intervals.js","#{@path}/#{@name}.js", "javascript")
-		fillTemplate("controls.js","#{@path}/#{@name}.js", "javascript")
+	def createGameCode()	
+		fillTemplate("jsTemplates/statics.js","#{@path}/#{@name}.js","javascript")
+		fillTemplate("jsTemplates/intervals.js","#{@path}/#{@name}.js", "javascript")
+		fillTemplate("jsTemplates/controls.js","#{@path}/#{@name}.js", "javascript")
 	end
 	
 	def createToolsCode
@@ -101,54 +119,9 @@ class GameCreationManager
 		#create tools code
 	end
 	
-	def createGameCanvas()
-		
-		fillTemplate("canvas.html","#{@path}/#{@name}.html","html")
-		
-=begin
-		#so sketchy.  must find a better way to handle this
-		name = 2;
-		width = 0;
-		height = 1;
-		
-		params = []
-		
-		#get name
-		puts "name of game\n"
-		puts prompt
-		x = gets
-		
-		x.sub(/[ \t\n]/, '_')
-		params[name] = x
-		
-		#get width
-		puts "specify width (integer > 0)\n"
-		puts prompt
-		x = gets
-		
-		until(x.to_i>0)
-			puts "specify width (integer > 0)\n"
-			puts prompt			
-			x = gets
-		end
-		params[width] = x
-						
-		#get height
-		puts "specify height (integer > 0)\n"
-		puts prompt
-		x = gets
-		
-		until(x.to_i>0)
-			puts "specify height (integer > 0)\n"
-			puts prompt			
-			x = gets
-		end
-		params[hight] = x				
-		
-		
-		#create page
-		
-=end
+	def createGameCanvas()	
+		p "#{@path}/#{@name}.html"
+		fillTemplate("htmlTemplates/canvas.html","#{@path}/#{@name}.html","html")
 	end
 	
 	def pathValid?(path)
@@ -158,12 +131,12 @@ class GameCreationManager
 	def setGamePath
 		inputPath = ""
 		puts "Specify path\n"
-		puts prompt
+		puts @prompt
 		
 		inputPath = gets
-		until(pathValid(inputPath))
+		until(pathValid?(inputPath))
 		end	
-		return inputPath		
+		@path = inputPath.chomp("\n")		
 	end
 	
 	def setGameName
@@ -171,11 +144,17 @@ class GameCreationManager
 	end
 	
 	def createGame
-		path = setGamePath
-		name = setGameName
-		createGameCanvas()
-		createGameCode()	
+		#setGamePath
+		setGameName
+		
+		initializeFile("#{@path}/#{@name}.html")
+		createGameCanvas
+		
+		initializeFile("#{@path}/#{@name}.js")
+		createGameCode	
 			
 	end
+	
+	
 	
 end

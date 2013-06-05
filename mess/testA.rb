@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'json'
 
-js_file = open("testTemplate.js", 'r')
-output = open("test.js",'w')
+js_file = open("statics.js", 'r')
+output = open("test2.js",'w')
 js_file.read.split(/PARAM/).each{ |section|
 	param = section.gsub(/["]/,'\\\"').gsub(/[\n\t\\]/,'').match(/\/\*(.[\s]*.)*\*\//)
 	unless param == nil
