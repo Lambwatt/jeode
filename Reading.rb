@@ -40,15 +40,11 @@ class Reading
 			
 		blocks.each{ |b|
 			
-			#p b
-			
 			tail = ''
 			metaData = getMetaData(b)
 
-			p metaData
 			unless metaData == nil
 				
-				#p metaData
 				tail = metaData.gsub(/\\\"/,'"')
 				
 				str = sprintf( "%s%s",b.sub(tail,''),evaluateCommand(getCommand(metaData)))
@@ -65,8 +61,6 @@ class Reading
 	#	seperates metadata from a block string
 	#
 	def getMetaData(block)
-	
-		p block
 		
 		commentStart = @format["commentStart"]
 		commentEnd = @format["commentEnd"]		
@@ -74,16 +68,12 @@ class Reading
 		#FixMe redundant operations and handle formats better
 		metaData = block.gsub(/["]/,'\\\"').gsub(/[\n\t]/,'')
 		if (@format["format"] == "javascript")
-			#p "ran as javascript"
 			metaData = metaData.match(/#{commentStart}(.[\s]*.)*#{commentEnd}/) 
 		end
 		
 		if (@format["format"] == "html")
-			p "ran as html"
 			metaData = block.gsub(/["]/,'\\\"').match(/#{commentStart}(.*[\s]*.*)*#{commentEnd}/) 
 		end		
-		
-		p metaData
 	
 		unless metaData == nil
 				metaData = metaData[0]
@@ -215,11 +205,8 @@ class Reading
 	#
 	def request(name, prompt, validation, process)
 		
-		#p "Ran request"
+		eval("def validate(s)"+validation+"; end")	
 		
-		eval("def validate(s)"+validation+"; end")	#needs to be tested	
-		
-		#p "prompt is "+prompt
 		p prompt
 		puts $prompt
 							
@@ -235,9 +222,7 @@ class Reading
 		s.gsub!(/[\n\t]/,'')	
 			
 		@memory[name] = s
-		#pre = guide["prefix"]
-		#suf = guide["suffix"]
-		return #pre+s+suf		
+		return 		
 	end
 	
 	##

@@ -1,10 +1,8 @@
 setInterval(function() {
     animate(canvas, context);
-},  /*{"type":"paramater","prompt":"specify draw interval (integer > 0)",
-"validate":"def validate(s);
-            return s.to_i>0;
-            end",
-"prefix":"\"","suffix":"\""}*/STOP);
+},  /*{"type":"request","name":"draw","prompt":"specify draw interval (integer > 0)",
+"validation_function":"return s.to_i>0","processing_function":"return"}*/STOP
+/*{"type":"get","name":"draw","prefix":"\"","suffix":"\""}*/STOP);
 function animate(canvas, context)
 {
     context.clearRect(0,0,canvas.width,canvas.height);
@@ -22,11 +20,9 @@ function animate(canvas, context)
 
 setInterval(function() {
     update();
-},  /*{"type":"paramater","prompt":"specify update interval (integer > 0)",
-"validate":"def validate(s);
-            return s.to_i>0;
-            end",
-"prefix":"\"","suffix":"\""}*/STOP);
+},  /*{"type":"request","name":"update","prompt":"specify update interval (integer > 0)",
+"validation_function":"return s.to_i>0","processing_function":"return"}*/STOP
+/*{"type":"get","name":"update","prefix":"\"","suffix":"\""}*/STOP);
 
 function update()
 {

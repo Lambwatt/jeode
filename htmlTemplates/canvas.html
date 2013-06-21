@@ -2,7 +2,7 @@
 	<head>
     	</head>
 	<body>
-		<canvas id="canvas" <!--{"type":"paramater","prompt":"specify width (integer > 0)","validate":"def validate(s);return s.to_i>0;end","prefix":"width=\"","suffix":"px\""}-->STOP <!--{"type":"paramater","prompt":"specify height (integer > 0)","validate":"def validate(s);return s.to_i>0;end","prefix":"height=\"","suffix":"px\""}-->STOP>This browser does not support canvas</canvas>
-		<script <!--{"type":"variable","name":"name","prefix":"src=\"","suffix":".js\""}-->STOP></script>
+		<canvas id="canvas" <!--{"type":"request","name":"width","prompt":"specify width (integer > 0)","validation_function":"return s.to_i>0","processing_function":"return"}-->STOP <!--{"type":"get","name":"width","prefix":"width=\"","suffix":"px\""}-->STOP <!--{"type":"request","name":"height","prompt":"specify height (integer > 0)","validation_function":"return s.to_i>0","processing_function":"return"}-->STOP <!--{"type":"get","name":"height","prefix":"width=\"","suffix":"px\""}-->STOP >This browser does not support canvas</canvas>
+		<script <!--{"type":"get","name":"name","prefix":"src=\"","suffix":".js\""}-->STOP></script>
 	</body>
 </html>
