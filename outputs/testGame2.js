@@ -1,10 +1,8 @@
 setInterval(function() {
     animate(canvas, context);
-},  /*{"type":"paramater","prompt":"specify draw interval (integer > 0)",
-"validate":"def validate(s);
-            return s.to_i>0;
-            end",
-"prefix":"\"","suffix":"\""}*/"30");
+},  /*{"type":"request","name":"draw","prompt":"specify draw interval (integer > 0)",
+"validation_function":"return s.to_i>0","processing_function":"return"}*/
+"30");
 function animate(canvas, context)
 {
     context.clearRect(0,0,canvas.width,canvas.height);
@@ -22,11 +20,9 @@ function animate(canvas, context)
 
 setInterval(function() {
     update();
-},  /*{"type":"paramater","prompt":"specify update interval (integer > 0)",
-"validate":"def validate(s);
-            return s.to_i>0;
-            end",
-"prefix":"\"","suffix":"\""}*/"10");
+},  /*{"type":"request","name":"update","prompt":"specify update interval (integer > 0)",
+"validation_function":"return s.to_i>0","processing_function":"return"}*/
+"10");
 
 function update()
 {

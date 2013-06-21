@@ -1,8 +1,8 @@
 def getFormats
 	formats = {}
 
-	formats["javascript"] = {"commentStart"=>"\\\/\\\*", "commentEnd"=>"\\\*\\\/", "startLength"=>2, "endLength"=>2, "saveMetadata"=>true}
-	formats["html"] = {"commentStart"=>"<!--", "commentEnd"=>"-->", "startLength"=>4, "endLength"=>3, "saveMetadata"=>false}
+	formats["javascript"] = {"format"=>"javascript","commentStart"=>"\\\/\\\*", "commentEnd"=>"\\\*\\\/", "startLength"=>2, "endLength"=>2, "saveMetadata"=>true}
+	formats["html"] = {"format"=>"html","commentStart"=>"<!--", "commentEnd"=>"-->", "startLength"=>4, "endLength"=>3, "saveMetadata"=>false}
 	return formats
 end
 

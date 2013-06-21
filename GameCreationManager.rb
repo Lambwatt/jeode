@@ -1,5 +1,6 @@
 require 'TemplateFormats'
 require 'tools'
+require 'Reading'
 
 require 'rubygems'
 require 'json'
@@ -106,10 +107,32 @@ class GameCreationManager
 		}
 	end
 	
+	def fillTemplate2(templateFile, destFile, format)
+			
+			
+			unless @formats.has_key? format
+				p "format not recognized"
+				return
+			end
+			
+			append_file_sandwhich(destFile){|dest|
+				read_file_sandwhich(templateFile){|js_file|
+					
+					template_reading = Reading.new(@formats[format], {"name"=> @name2})
+					
+					template_reading.readTemplate(js_file.read,dest)
+				}
+			}
+		end	
+	
 	def createGameCode()	
-		fillTemplate("jsTemplates/statics.js","#{@path}/#{@name}.js","javascript")
-		fillTemplate("jsTemplates/intervals.js","#{@path}/#{@name}.js", "javascript")
-		fillTemplate("jsTemplates/controls.js","#{@path}/#{@name}.js", "javascript")
+		#fillTemplate("jsTemplates/statics.js","#{@path}/#{@name}.js","javascript")
+		#fillTemplate("jsTemplates/intervals.js","#{@path}/#{@name}.js", "javascript")
+		#fillTemplate("jsTemplates/controls.js","#{@path}/#{@name}.js", "javascript")
+		
+		#fillTemplate("jsTemplates/statics.js","#{@path}/#{@name}.js","javascript")
+		fillTemplate2("jsTemplates/intervals2.js","#{@path}/#{@name2}.js", "javascript")
+		#fillTemplate("jsTemplates/controls2.js","#{@path}/#{@name}.js", "javascript")		
 	end
 	
 	def createToolsCode
@@ -120,8 +143,11 @@ class GameCreationManager
 	end
 	
 	def createGameCanvas()	
-		p "#{@path}/#{@name}.html"
-		fillTemplate("htmlTemplates/canvas.html","#{@path}/#{@name}.html","html")
+		#p "path 1 = #{@path}/#{@name}.html"
+		#fillTemplate("htmlTemplates/canvas2.html","#{@path}/#{@name}.html","html")
+		
+		p "path 2 = #{@path}/#{@name2}.html"
+		fillTemplate2("htmlTemplates/canvas2.html","#{@path}/#{@name2}.html","html")		
 	end
 	
 	def pathValid?(path)
@@ -140,11 +166,11 @@ class GameCreationManager
 	end
 	
 	def setGameName
-		@name = "testGame"
+		#@name = "testGame"
+		@name2 = "testGame2"
 	end
 	
 	def createGame
-		#setGamePath
 		setGameName
 		
 		initializeFile("#{@path}/#{@name}.html")
@@ -152,7 +178,6 @@ class GameCreationManager
 		
 		initializeFile("#{@path}/#{@name}.js")
 		createGameCode	
-			
 	end
 	
 	

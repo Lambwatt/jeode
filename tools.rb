@@ -1,13 +1,10 @@
-
-	
-	def lengthWithEscapes(string)
-		i = 0
-		string.split(/\./){|m|
-			i+=1
-		}
-		return string.length-i
-	end
-
+def lengthWithEscapes(string)
+	i = 0
+	string.split(/\./){|m|
+		i+=1
+	}
+	return string.length-i
+end
 	
 =begin
 p lengthWithEscapes("aaa")==3
