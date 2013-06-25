@@ -7,7 +7,7 @@ class Hook
 		@step_response = step_response_proc_taking_mem_and_block #must be a proc expecting 2 blocks (mem, block)
 	end
 	
-	def match(label)
+	def match?(label)
 		return true if @label==label
 		return false
 	end
@@ -16,7 +16,7 @@ class Hook
 		@trigger_response.call(mem)
 	end	
 	
-	def step(mem)
-		@step_response.call(mem)
+	def step(mem, block)
+		@step_response.call(mem, block)
 	end	
 end

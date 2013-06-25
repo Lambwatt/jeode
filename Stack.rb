@@ -5,7 +5,7 @@ class Stack
 	end
 	
 	def push(input)
-		@contents.push(hook)
+		@contents.push(input)
 	end
 	
 	def pop

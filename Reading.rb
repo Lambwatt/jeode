@@ -1,5 +1,6 @@
 require 'Stack'
 require 'Hook'
+require 'Recording'
 require 'test/unit'
 
 require 'rubygems'
@@ -30,6 +31,7 @@ class Reading
 	def initialize(format, mem={})
 		@memory = mem.clone
 		@format = format
+		@recordings = {}
 		@hook_stack = Stack.new
 	end
 	
@@ -52,25 +54,21 @@ class Reading
 			tail = ''
 			metaData = getMetaData(b)
 			
+			#read_block = @hook_stack.empty? or @hook_stack.top.step(@memory, b)
+			updateRecordings(b)
 			unless metaData == nil
 				
 				tail = metaData.gsub(/\\\"/,'"')
 
-				str = sprintf( "%s%s",b.sub(tail,''),evaluateCommand(getCommand(metaData)))
-				if @hook_stack.empty? or not @hook_stack.top.step(@memory, b)
+				if @hook_stack.empty? or @hook_stack.top.step(@memory, b)
+					str = sprintf( "%s%s",b.sub(tail,''),evaluateCommand(getCommand(metaData)))
 					if @format["saveMetadata"]
 						yield str+metaData
 					else
 						yield str
 					end
 				else
-					if @format["saveMetadata"]
-						p "took 3"
-						yield b
-					else
-						p "took 4"
-						yield b.sub(tail,'')
-					end
+					yield ""
 				end					
 			else
 				yield b
@@ -114,6 +112,12 @@ class Reading
 		
 		return JSON.parse(com)  if valid_json? com 
 		return nil 			
+	end
+	
+	def updateRecordings(block)
+		#@recordings.each{|i| p i}
+		@recordings.each_value{|i| i.add block }
+		#@recordings.each{|i| p i}
 	end
 	
 ###############################################################################
@@ -226,7 +230,8 @@ class Reading
 	#	handles a label
 	#
 	def label(name)
-		@hook_stack.pop.trigger(@memory) if @hook_stack.top!=nil and @hook_stack.top.mach?(name)
+		@recordings.each_value{|rec| rec.stopIfOverAt! name }
+		@hook_stack.pop.trigger(@memory) if @hook_stack.top!=nil and @hook_stack.top.match?(name)
 		return ""
 	end
 	
@@ -286,9 +291,8 @@ class Reading
 	#	calls record with the correct paramaters
 	#
 	def record(name, end_label)
-		@hook_stack.push(	Hook.new(end_label, 
-							proc{},
-		            		proc{|mem,block| mem[name]<<block; return true}))
+		@recordings[name] = Recording.new(end_label)
+		#@recordings.push(name)
 		return ""
 	end
 	
@@ -296,8 +300,11 @@ class Reading
 	#	calls play with the correct paramaters
 	#
 	def play(name)
-		processBlocks(@memory[name])
-		return ""
+		playback = ""
+		#p name
+		#p @recordings[name]
+		processBlocks(@recordings[name].play){|r| playback<<r }
+		return playback
 	end
 	
 	##
@@ -420,14 +427,40 @@ if run_tests
 			#assert_equal read.processBlocks(["aa<\"type\":\"get\",\"name\":\"test\", \"prefix\":\"<\", \"suffix\":\">\" >","bb"]).each, ["aa", "bb"], "TEST GET ASSIGNED invalid index"
 		end
 		
-			#test record
-			#assert_equal read.processBlocks(["aa<\"type\":\"record\",\"name\":\"test_rec\, \"name\":\"test_rec\">","bb"]).each, ["aa","bb"], "TEST recording over no space"
-			
-			#assert_equal read.processBlocks(["aa<\"type\":\"label\",\"name\":\"test\">","bb"]).each, ["aa","bb"], "TEST un-ending recording"
-			
-			#assert_equal read.processBlocks(["aa<\"type\":\"label\",\"name\":\"test\">","bb"]).each, ["aa","bb"], "one block recording recording"
+		#test record and play
+		def test_record_and_play_once
+			test_format = getFormats["test"]
+			read = Reading.new(test_format)		
+			test = ""
+			read.readTemplate "aa<{\"type\":\"record\",\"name\":\"test\",\"end_label\":\"end\"}>STOPcSTOPdSTOP<{\"type\":\"label\",\"name\":\"end\"}>STOP<{\"type\":\"play\",\"name\":\"test\"}>STOPbb", test
+			assert_equal "aacdcdbb", test, "test record and play once"
+			#assert_equal "c", read.memory["test"], "Failure to store variable"	
+		end
+		
+=begin	
+		#test record and play
+		def test_record_and_play_empty_record
+			test_format = getFormats["test"]
+			read = Reading.new(test_format)		
+			test = ""
+			read.readTemplate "aa<{\"type\":\"record\",\"name\":\"test\",\"end_label\":\"end\"}>STOP<{\"type\":\"label\",\"name\":\"end\"}>STOP<{\"type\":\"play\",\"name\":\"test\"}>bb", test
+			assert_equal "aabb", test, "test record and play empty"
+			#assert_equal "c", read.memory["test"], "Failure to store variable"	
+		end	
+		
+		#test record with no end
+		def test_record_no_termination
+			test_format = getFormats["test"]
+			read = Reading.new(test_format)		
+			test = ""
+			read.readTemplate "aa<{\"type\":\"record\",\"name\":\"test\",\"end_label\":\"end\"}>STOPcSTOPbb", test
+			assert_equal "aacbb", test, "test record and play empty"
+			assert_equal ["c","bb"], read.memory["test"], "Failure to record blocks"	
+		end	
+=end						
 	end
-	
+
+
 	#Test_Reader.new.test
 	#test.test
 end
