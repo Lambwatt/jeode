@@ -176,16 +176,9 @@ class Reading
 	#	calls set with the correct paramaters 
 	#
 	def runSet(com)
-		#ADD INDEX SUPPORT AT A LATER TIME
-		#if(com.has_key? "index")
-		#	return set(	com["name"],
-		#				com["function"]
-		#						  )			
-		#else
-			return set(	com["name"],
-						com["function"]
-			          )
-		#end
+		return set(	com["name"],
+			com["function"]
+          )
 	end
 	
 	##
@@ -195,8 +188,8 @@ class Reading
 		return get(	com["name"],
 		  			com["prefix"],
 		  			com["suffix"]
-		)
-	end
+				)
+	end	
 	
 	##
 	#	calls record with the correct paramaters
@@ -259,15 +252,17 @@ class Reading
 		@memory[name] = s
 		return "" 		
 	end
-	
+
+=begin	
 	##
 	#	calls set with the correct paramaters
 	#
-	#def set(name, index, assignment_proc)
-	#	p "set with index"+assignment_proc
-#		@memory[name][index] = assignment_proc.call(@memory)
-	#	return "" 
-	#end
+	def setAtIndex(name, index, assignment_proc)
+		#p "set with index"+assignment_proc
+		@memory[name][index] = assignment_proc.call(@memory)
+		return "" 
+	end
+=end
 	
 	##
 	#	calls set with the correct paramaters
@@ -277,6 +272,19 @@ class Reading
 		@memory[name] = set_proc(@memory)
 		return ""
 	end	
+	
+=begin
+	##
+	#	calls get with the correct paramaters including index
+	#
+	def getAtIndex(name, index, prefix, suffix)
+		return "<<Error: Name not found in memory>>" unless @memory.has_key? name
+		return "<<Error: Name has no index>>" unless @memory.has_key? name
+		return prefix + @memory[name][index] + suffix unless @memory[name][index].nil?
+		return "" 
+	end	
+=end
+	
 	
 	##
 	#	calls get with the correct paramaters
@@ -388,19 +396,12 @@ if run_tests
 		#set variable tests
 		def test_setting_variable
 			test_format = getFormats["test"]
+			
 			read = Reading.new(test_format)		
 			test = ""
 			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"test\",\"function\":\"return 'cc'\"}>STOPbb", test				
 			assert_equal "aabb", test, "mistake in processing variable assignment"
 			assert_equal "cc", read.memory["test"], "Failure to store variable"
-			
-			test_format = getFormats["test"]
-			read = Reading.new(test_format)		
-			test = ""
-			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"test\",\"function\":\"return 'cc'\"}>STOP<{\"type\":\"get\",\"name\":\"test\",\"prefix\":\"<\", \"suffix\":\">\"}>STOPbb", test				
-			assert_equal "aa<cc>bb", test, "mistake in processing variable assignment"
-			assert_equal "cc", read.memory["test"], "Failure to store variable"	
-			assert_equal "cc", read.memory["test"], "Failure to store variable"			
 		end
 			
 			#assert_equal read.processBlocks(["aa<\"type\":\"set\",\"name\":\"test\",\"index\":\"0\"\"function\":\"return \"cc\"\">","bb"]).each, ["aa","bb"], "mistake in processing variable assignment with index"
@@ -412,7 +413,15 @@ if run_tests
 			read = Reading.new(test_format)	
 			test = ""
 			read.readTemplate "aa<{\"type\":\"get\",\"name\":\"testing\", \"prefix\":\"<\", \"suffix\":\">\"}>STOPbb", test					
-			assert_equal "aabb", test, "TEST GET UNASSIGNED"		
+			assert_equal "aabb", test, "TEST GET UNASSIGNED"
+			
+=begin
+			test_format = getFormats["test"]
+			read = Reading.new(test_format)	
+			test = ""
+			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"test\",\"function\":\"return 'cc'\"}>STOP<{\"type\":\"get\",\"name\":\"test\", \"index\":0, \"prefix\":\"<\", \"suffix\":\">\"}>STOPbb", test					
+			assert_equal "aabb", test, "TEST GET assigned without index"
+=end					
 		end
 		
 		#get valid variable test
@@ -422,9 +431,16 @@ if run_tests
 			test = ""
 			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"test\",\"function\":\"return 'cc'\"}>STOP<{\"type\":\"get\",\"name\":\"test\",\"prefix\":\"<\", \"suffix\":\">\"}>STOPbb", test
 			assert_equal "aa<cc>bb", test, "TEST GET ASSIGNED"
+			assert_equal "cc", read.memory["test"], "Failure to store variable"
+			
+=begin
+			read = Reading.new(test_format)		
+			test = ""
+			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"test\", \"index\":0,\"function\":\"return 'cc'\"}>STOP<{\"type\":\"get\",\"name\":\"test\", \"index\":0,\"prefix\":\"<\", \"suffix\":\">\"}>STOPbb", test
+			assert_equal "aa<cc>bb", test, "TEST GET ASSIGNED with index"
 			assert_equal "cc", read.memory["test"], "Failure to store variable"	
-			#assert_equal read.processBlocks(["aa<\"type\":\"get\",\"name\":\"test\", \"prefix\":\"<\", \"suffix\":\">\" >","bb"]).each, ["aa<cc>", "bb"], "TEST GET ASSIGNED with valid index"
-			#assert_equal read.processBlocks(["aa<\"type\":\"get\",\"name\":\"test\", \"prefix\":\"<\", \"suffix\":\">\" >","bb"]).each, ["aa", "bb"], "TEST GET ASSIGNED invalid index"
+=end
+							
 		end
 		
 		#test record and play
@@ -460,9 +476,15 @@ if run_tests
 =end						
 	end
 
-
+	def test_array_sims
+		test_format = getFormats["test"]
+		read = Reading.new(test_format)		
+		test = ""	
+		read.readTemplate "aa<{\"type\":\"set\",\"name\":\"array\",\"function\":\"return ['cc','dd']\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][0]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][1]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOPbb", test
+		assert_equal "aaccddbb", test, "didn't handle array properly"
+		assert_equal "dd", read.memory["var"], "var not pointed correctly"		
+	end
 	#Test_Reader.new.test
 	#test.test
 end
-
 
