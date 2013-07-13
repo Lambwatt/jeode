@@ -54,24 +54,27 @@ class Reading
 			tail = ''
 			metaData = getMetaData(b)
 			
-			#read_block = @hook_stack.empty? or @hook_stack.top.step(@memory, b)
 			updateRecordings(b)
+			
 			unless metaData == nil
 				
 				tail = metaData.gsub(/\\\"/,'"')
-
-				if @hook_stack.empty? or @hook_stack.top.step(@memory, b)
-					str = sprintf( "%s%s",b.sub(tail,''),evaluateCommand(getCommand(metaData)))
+					
+				com = getCommand(metaData)
+				if  @hook_stack.empty? or @hook_stack.top.step(@memory, b)
+					
+					str = sprintf( "%s%s",b.sub(tail,''),evaluateCommand(com))
 					if @format["saveMetadata"]
 						yield str+metaData
 					else
 						yield str
 					end
-				else
+				else	
+					evaluateCommand(com) if not com.nil? and com["type"]=="label"
 					yield ""
 				end					
 			else
-				yield b
+				yield b if  @hook_stack.empty? or @hook_stack.top.step(@memory, b)
 			end
 		}
 	end
@@ -92,8 +95,7 @@ class Reading
 			metaData = block.gsub(/["]/,'\\\"').match(/#{commentStart}(.*[\s]*.*)*#{commentEnd}/) 
 		else
 			metaData = metaData.match(/#{commentStart}(.*[\s]*.*)*#{commentEnd}/) 
-		end	
-	
+		end		
 		
 		unless metaData == nil
 				metaData = metaData[0]
@@ -115,9 +117,7 @@ class Reading
 	end
 	
 	def updateRecordings(block)
-		#@recordings.each{|i| p i}
 		@recordings.each_value{|i| i.add block }
-		#@recordings.each{|i| p i}
 	end
 	
 ###############################################################################
@@ -127,8 +127,9 @@ class Reading
 	#	figures out which command to run
 	#
 	def evaluateCommand(com)
-		return if com.nil?
 
+		return if com.nil?
+			
 		case com["type"]
 		when "label"
 			return runLabel(com)
@@ -224,7 +225,8 @@ class Reading
 	#
 	def label(name)
 		@recordings.each_value{|rec| rec.stopIfOverAt! name }
-		@hook_stack.pop.trigger(@memory) if @hook_stack.top!=nil and @hook_stack.top.match?(name)
+		@hook_stack.pop.trigger(@memory) if (not @hook_stack.empty?) and @hook_stack.top.match?(name)
+		
 		return ""
 	end
 	
@@ -290,7 +292,6 @@ class Reading
 	#	calls get with the correct paramaters
 	#
 	def get(name, prefix, suffix)
-		
 		return prefix + @memory[name]+suffix unless @memory[name].nil?
 		return "" 
 	end
@@ -300,7 +301,6 @@ class Reading
 	#
 	def record(name, end_label)
 		@recordings[name] = Recording.new(end_label)
-		#@recordings.push(name)
 		return ""
 	end
 	
@@ -309,8 +309,6 @@ class Reading
 	#
 	def play(name)
 		playback = ""
-		#p name
-		#p @recordings[name]
 		processBlocks(@recordings[name].play){|r| playback<<r }
 		return playback
 	end
@@ -319,7 +317,9 @@ class Reading
 	#	calls label with the correct paramaters
 	#
 	def switch(test, end_labels)
-		@hook_stack.push(Hook.new(end_labels[test.call(@memory)], proc{}, proc{return false}))
+		eval("def test(m) "+test+"; end")
+		x = test(@memory)
+		@hook_stack.push(Hook.new(end_labels[x], proc{return false}, proc{return false}))
 		return ""	
 	end		
 	
@@ -474,17 +474,25 @@ if run_tests
 			assert_equal ["c","bb"], read.memory["test"], "Failure to record blocks"	
 		end	
 =end						
-	end
+	
 
-	def test_array_sims
-		test_format = getFormats["test"]
-		read = Reading.new(test_format)		
-		test = ""	
-		read.readTemplate "aa<{\"type\":\"set\",\"name\":\"array\",\"function\":\"return ['cc','dd']\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][0]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][1]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOPbb", test
-		assert_equal "aaccddbb", test, "didn't handle array properly"
-		assert_equal "dd", read.memory["var"], "var not pointed correctly"		
+		def test_array_sims
+			test_format = getFormats["test"]
+			read = Reading.new(test_format)		
+			test = ""	
+			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"array\",\"function\":\"return ['cc','dd']\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][0]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][1]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOPbb", test
+			assert_equal "aaccddbb", test, "didn't handle array properly"
+			assert_equal "dd", read.memory["var"], "var not pointed correctly"		
+		end
+		
+		def test_switch
+			test_format = getFormats["test"]
+			read = Reading.new(test_format)		
+			test = ""	
+			read.readTemplate "aa<{\"type\":\"switch\",\"test_function\":\"return 0.to_s\",\"result_label_hash\":{\"0\":\"end\"}}>STOPbbSTOP<{\"type\":\"label\",\"name\":\"end\"}>STOPcc", test
+			assert_equal "aacc", test, "didn't handle switch properly"	
+		end
+	
 	end
-	#Test_Reader.new.test
-	#test.test
 end
 

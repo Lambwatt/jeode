@@ -1,5 +1,5 @@
 class Hook
-	
+	#attr_reader :label
 	
 	def initialize(label, trigger_response_proc_taking_mem, step_response_proc_taking_mem_and_block=proc{} )
 		@label = label
@@ -13,10 +13,10 @@ class Hook
 	end
 
 	def trigger(mem)
-		@trigger_response.call(mem)
+		return @trigger_response.call(mem)
 	end	
 	
 	def step(mem, block)
-		@step_response.call(mem, block)
+		return @step_response.call(mem, block)
 	end	
 end

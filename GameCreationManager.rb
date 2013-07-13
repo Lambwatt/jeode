@@ -64,7 +64,7 @@ class GameCreationManager
 	end
 	
 	def createGameCanvas()	
-		fillTemplate2("htmlTemplates/canvas.html","#{@path}/#{@name}.html","html")		
+		fillTemplate("htmlTemplates/canvas.html","#{@path}/#{@name}.html","html")		
 	end
 	
 	def pathValid?(path)
