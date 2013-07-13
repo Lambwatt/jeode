@@ -292,7 +292,7 @@ class Reading
 	#	calls get with the correct paramaters
 	#
 	def get(name, prefix, suffix)
-		return prefix + @memory[name]+suffix unless @memory[name].nil?
+		return prefix + @memory[name]+suffix unless @memory[name].nil? 
 		return "" 
 	end
 	
@@ -480,7 +480,7 @@ if run_tests
 			test_format = getFormats["test"]
 			read = Reading.new(test_format)		
 			test = ""	
-			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"array\",\"function\":\"return ['cc','dd']\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][0]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][1]\"}>STOP<{\"type\":\"get\",\"name\":\"var\"}>STOPbb", test
+			read.readTemplate "aa<{\"type\":\"set\",\"name\":\"array\",\"function\":\"return ['cc','dd']\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][0]\"}>STOP<{\"type\":\"get\",\"name\":\"var\", \"prefix\":\"\", \"suffix\":\"\"}>STOP<{\"type\":\"set\",\"name\":\"var\",\"function\":\"return m['array'][1]\"}>STOP<{\"type\":\"get\",\"name\":\"var\", \"prefix\":\"\", \"suffix\":\"\"}>STOPbb", test
 			assert_equal "aaccddbb", test, "didn't handle array properly"
 			assert_equal "dd", read.memory["var"], "var not pointed correctly"		
 		end

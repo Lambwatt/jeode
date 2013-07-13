@@ -25,7 +25,7 @@ setInterval(function() {
     animate(canvas, context);
 },  /*{"type":"request","name":"draw","prompt":"specify draw interval (integer > 0)",
 "validation_function":"return s.to_i>0","processing_function":"return"}*//*{\"type\":\"request\",\"name\":\"draw\",\"prompt\":\"specify draw interval (integer > 0)\",\"validation_function\":\"return s.to_i>0\",\"processing_function\":\"return\"}*/
-"9"/*{\"type\":\"get\",\"name\":\"draw\",\"prefix\":\"\\"\",\"suffix\":\"\\"\"}*/);
+"30"/*{\"type\":\"get\",\"name\":\"draw\",\"prefix\":\"\\"\",\"suffix\":\"\\"\"}*/);
 function animate(canvas, context)
 {
     context.clearRect(0,0,canvas.width,canvas.height);
@@ -45,7 +45,7 @@ setInterval(function() {
     update();
 },  /*{"type":"request","name":"update","prompt":"specify update interval (integer > 0)",
 "validation_function":"return s.to_i>0","processing_function":"return"}*//*{\"type\":\"request\",\"name\":\"update\",\"prompt\":\"specify update interval (integer > 0)\",\"validation_function\":\"return s.to_i>0\",\"processing_function\":\"return\"}*/
-"9"/*{\"type\":\"get\",\"name\":\"update\",\"prefix\":\"\\"\",\"suffix\":\"\\"\"}*/);
+"10"/*{\"type\":\"get\",\"name\":\"update\",\"prefix\":\"\\"\",\"suffix\":\"\\"\"}*/);
 
 function update()
 {
